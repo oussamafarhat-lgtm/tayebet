@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توثيق الحالة الصحية</title>
+<style>
+*{font-family:'Segoe UI',Tahoma,sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);min-height:100vh;color:#333}
+.glass{background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1)}
+.glass-card{background:rgba(255,255,255,0.95);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+.nav-item{padding:12px 16px;border-radius:12px;margin-bottom:6px;cursor:pointer;color:#94a3b8;display:flex;align-items:center;gap:10px;transition:all .3s}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:#fff}
+.nav-item.active{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff}
+.section{display:none}
+.section.active{display:block;animation:fadeIn .4s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.input-field{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;background:#f8fafc}
+.input-field:focus{outline:none;border-color:#0ea5e9}
+.btn-primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;padding:10px 24px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+.btn-success{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:10px 24px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-orange{background:#ffedd5;color:#9a3412}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.alert-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:14px;border-radius:10px;margin-bottom:12px}
+.alert-orange{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:14px;border-radius:10px;margin-bottom:12px}
+.alert-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;padding:14px;border-radius:10px;margin-bottom:12px}
+.alert-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:14px;border-radius:10px;margin-bottom:12px}
+.test-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;padding:10px;border-bottom:1px solid #f1f5f9;align-items:center}
+.meal-card{background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px}
+.symptom-slider{-webkit-appearance:none;width:100%;height:8px;border-radius:4px;background:#e2e8f0;outline:none}
+.symptom-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#0ea5e9;cursor:pointer}
+.chart-container{position:relative;height:250px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-overlay.active{display:flex}
+.modal-content{background:#fff;border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.disclaimer{background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;color:#92400e;padding:16px;border-radius:12px;margin-bottom:16px}
+.hidden{display:none!important}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.test-row{grid-template-columns:1fr 1fr}aside{position:fixed;bottom:0;left:0;right:0;z-index:50;width:100%!important;flex-direction:row!important;padding:8px!important}aside .p-6{display:none}aside nav{display:flex;flex-direction:row;overflow-x:auto;padding:0!important;gap:4px}aside nav .nav-item{margin:0;padding:8px;font-size:11px;white-space:nowrap}main{padding-bottom:70px!important;padding:12px!important}}
+</style>
+</head>
+<body>
+<!-- Disclaimer Modal -->
+<div class="modal-overlay active" id="disclaimerModal">
+<div class="modal-content">
+<div style="text-align:center;margin-bottom:24px;">
+<div style="width:64px;height:64px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">⚠️</div>
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;">إخلاء مسؤولية طبي</h2>
+</div>
+<div class="disclaimer">
+<p style="font-weight:700;margin-bottom:8px;">⚠️ تنبيه هام جداً:</p>
+<ul style="font-size:14px;line-height:2;padding-right:20px;">
+<li>• هذا التطبيق <strong>أداة توثيق شخصية فقط</strong>، ولا يُقدم تشخيصاً أو علاجاً.</li>
+<li>• يجب <strong>عدم تغيير أو إيقاف أي دواء</strong> بدون استشارة طبيبك المعالج.</li>
+<li>• يجب إجراء <strong>جميع التحاليل المخبرية</strong> في مختبر معتمد.</li>
+<li>• في حالة ظهور أعراض خطيرة، <strong>اتصل بالإسعاف فوراً</strong>.</li>
+<li>• البيانات تُخزن محلياً في متصفحك فقط.</li>
+</ul>
+</div>
+<button class="btn-primary" style="width:100%;margin-top:16px;" onclick="document.getElementById('disclaimerModal').classList.remove('active');">أقر بذلك وأوافق على الاستخدام</button>
+</div>
+</div>
+
+<div style="display:flex;min-height:100vh;">
+<!-- Sidebar -->
+<aside class="glass" style="width:280px;min-width:280px;display:flex;flex-direction:column;">
+<div style="padding:24px;border-bottom:1px solid rgba(255,255,255,0.1);">
+<div style="display:flex;align-items:center;gap:12px;">
+<div style="width:48px;height:48px;background:linear-gradient(135deg,#0ea5e9,#0284c7);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;">🩺</div>
+<div>
+<h1 style="color:white;font-size:18px;font-weight:800;margin:0;">توثيق الحالة</h1>
+<p style="color:#94a3b8;font-size:12px;margin:4px 0 0;">نظام مراقبة صحية موثق</p>
+</div>
+</div>
+</div>
+<nav style="flex:1;padding:16px;overflow-y:auto;">
+<div class="nav-item active" onclick="showSection('dashboard',this)">📊 لوحة المراقبة</div>
+<div class="nav-item" onclick="showSection('baseline',this)">📋 البيانات الأولية <span class="badge badge-red" style="margin-right:auto;">إلزامي</span></div>
+<div class="nav-item" onclick="showSection('daily',this)">🍽️ التوثيق اليومي</div>
+<div class="nav-item" onclick="showSection('symptoms',this)">😷 الأعراض</div>
+<div class="nav-item" onclick="showSection('medications',this)">💊 الأدوية</div>
+<div class="nav-item" onclick="showSection('followup',this)">🔬 التحاليل الدورية</div>
+<div class="nav-item" onclick="showSection('reports',this)">📈 التقارير</div>
+<div class="nav-item" onclick="showSection('alerts',this)">🔔 التنبيهات <span class="badge badge-red hidden" style="margin-right:auto;" id="alertBadge">0</span></div>
+</nav>
+<div style="padding:16px;border-top:1px solid rgba(255,255,255,0.1);">
+<div class="glass" style="border-radius:12px;padding:12px;">
+<p style="color:#94a3b8;font-size:12px;margin:0 0 4px;">آخر تحديث</p>
+<p style="color:white;font-size:14px;font-weight:700;margin:0;" id="lastUpdate">لم يُدخل بعد</p>
+</div>
+</div>
+</aside>
+
+<!-- Main Content -->
+<main style="flex:1;overflow-y:auto;padding:32px;">
+
+<!-- Dashboard -->
+<div class="section active" id="dashboard">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">لوحة المراقبة</h2>
+<p style="color:#6b7280;">نظرة شاملة على حالتك الصحية</p>
+</div>
+<div class="grid-4" style="margin-top:16px;">
+<div class="glass-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div style="width:48px;height:48px;background:linear-gradient(135deg,#0ea5e9,#0284c7);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;">⚖️</div>
+<span class="badge badge-blue" id="weightStatus">—</span>
+</div>
+<p style="color:#6b7280;font-size:14px;">الوزن الحالي</p>
+<p style="font-size:28px;font-weight:800;color:#1f2937;margin-top:4px;" id="currentWeight">—</p>
+</div>
+<div class="glass-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div style="width:48px;height:48px;background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;">🩸</div>
+<span class="badge badge-blue" id="sugarStatus">—</span>
+</div>
+<p style="color:#6b7280;font-size:14px;">سكر صائم أخير</p>
+<p style="font-size:28px;font-weight:800;color:#1f2937;margin-top:4px;" id="currentSugar">—</p>
+</div>
+<div class="glass-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div style="width:48px;height:48px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;">🫘</div>
+<span class="badge badge-blue" id="kidneyStatus">—</span>
+</div>
+<p style="color:#6b7280;font-size:14px;">eGFR أخير</p>
+<p style="font-size:28px;font-weight:800;color:#1f2937;margin-top:4px;" id="currentEGFR">—</p>
+</div>
+<div class="glass-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<div style="width:48px;height:48px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;">📅</div>
+<span class="badge badge-orange" id="daysCount">0 يوم</span>
+</div>
+<p style="color:#6b7280;font-size:14px;">مدة المتابعة</p>
+<p style="font-size:28px;font-weight:800;color:#1f2937;margin-top:4px;" id="followupDays">0</p>
+</div>
+</div>
+<div class="grid-2" style="margin-top:16px;">
+<div class="glass-card">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">📉 تطور الوزن</h3>
+<div class="chart-container"><canvas id="weightChart"></canvas></div>
+</div>
+<div class="glass-card">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">📈 تطور السكر الصائم</h3>
+<div class="chart-container"><canvas id="sugarChart"></canvas></div>
+</div>
+</div>
+</div>
+
+<!-- Baseline -->
+<div class="section" id="baseline">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">البيانات الأولية</h2>
+<p style="color:#6b7280;">أدخل بياناتك قبل بدء النظام كخط أساس للمقارنة</p>
+</div>
+<div class="alert-blue" style="margin-top:16px;">
+ℹ️ <strong>تعليمة:</strong> أدخل البيانات من تقرير مخبري حديث (أقل من شهر)
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">المعلومات الشخصية</h3>
+<div class="grid-3">
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الاسم (اختياري)</label><input type="text" class="input-field" id="pName" placeholder="اسمك"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">العمر *</label><input type="number" class="input-field" id="pAge" placeholder="بالسنوات"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الجنس *</label><select class="input-field" id="pGender"><option value="">اختر</option><option value="male">ذكر</option><option value="female">أنثى</option></select></div>
+</div>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">القياسات الجسدية</h3>
+<div class="grid-4">
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الوزن (كغ) *</label><input type="number" step="0.1" class="input-field" id="bWeight" placeholder="78.5" oninput="calcBMI()"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الطول (سم) *</label><input type="number" step="0.1" class="input-field" id="bHeight" placeholder="175" oninput="calcBMI()"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">محيط الخصر (سم)</label><input type="number" step="0.1" class="input-field" id="bWaist" placeholder="92"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">BMI (يُحسب)</label><input type="text" class="input-field" style="background:#f3f4f6;" id="bBMI" readonly placeholder="—"></div>
+</div>
+<div class="grid-3" style="margin-top:12px;">
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">ضغط الانقباضي</label><input type="number" class="input-field" id="bBPsys" placeholder="120"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">ضغط الانبساطي</label><input type="number" class="input-field" id="bBPdia" placeholder="80"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">نبض القلب</label><input type="number" class="input-field" id="bHR" placeholder="72"></div>
+</div>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">التحاليل المخبرية — خط الأساس</h3>
+<div style="background:#f9fafb;border-radius:12px;padding:16px;">
+<div class="test-row" style="font-weight:700;color:#6b7280;font-size:13px;">
+<span>التحليل</span><span>القيمة</span><span>الوحدة</span><span>المرجعي</span>
+</div>
+<div id="baselineTests"></div>
+</div>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">التاريخ الطبي</h3>
+<div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الأمراض المزمنة</label><textarea class="input-field" id="bDiseases" rows="2" placeholder="سكري نوع 2، ضغط مرتفع"></textarea></div>
+<div style="margin-top:12px;"><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الأدوية الحالية</label><textarea class="input-field" id="bMeds" rows="2" placeholder="ميتفورمين 500mg مرتين يومياً"></textarea></div>
+<div style="margin-top:12px;"><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الحساسية</label><input type="text" class="input-field" id="bAllergies" placeholder="حساسية من المكسرات"></div>
+<div style="margin-top:12px;"><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">تاريخ العائلة</label><textarea class="input-field" id="bFamily" rows="2" placeholder="أمراض قلب مبكرة، سكري"></textarea></div>
+</div>
+</div>
+<div style="display:flex;justify-content:center;margin-top:24px;">
+<button class="btn-primary" style="font-size:16px;padding:12px 32px;" onclick="saveBaseline()">💾 حفظ البيانات الأولية</button>
+</div>
+</div>
+<!-- Daily Log -->
+<div class="section" id="daily">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">التوثيق اليومي</h2>
+<p style="color:#6b7280;">سجل وجباتك ونشاطك اليومي</p>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<h3 style="font-weight:700;color:#1f2937;">اليوم: <span id="todayDate"></span></h3>
+<span class="badge badge-blue" id="todayMealsCount">0 وجبات</span>
+</div>
+<div id="mealsContainer">
+<div class="meal-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<h4 style="font-weight:700;color:#374151;">الوجبة الأولى</h4>
+<button style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:18px;" onclick="this.closest('.meal-card').remove();updateMealCount();">🗑️</button>
+</div>
+<div class="grid-4">
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">نوع الطعام</label>
+<select class="input-field meal-type" style="padding:8px 12px;">
+<option value="">اختر</option>
+<option value="meat_red">🥩 لحم أحمر</option>
+<option value="meat_white">🍗 لحم أبيض</option>
+<option value="fish">🐟 سمك</option>
+<option value="eggs">🥚 بيض</option>
+<option value="butter">🧈 زبدة/سمن</option>
+<option value="oil">🫒 زيت نباتي</option>
+<option value="veg_cooked">🥬 خضار مطبوخ</option>
+<option value="veg_raw">🥗 خضار نيء</option>
+<option value="dairy">🥛 ألبان/جبن</option>
+<option value="nuts">🥜 مكسرات</option>
+<option value="fruit">🍎 فواكه</option>
+<option value="other">📦 أخرى</option>
+</select>
+</div>
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الكمية (غرام)</label>
+<input type="number" class="input-field meal-qty" style="padding:8px 12px;" placeholder="150">
+</div>
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">طريقة الطهي</label>
+<select class="input-field meal-cook" style="padding:8px 12px;">
+<option value="">اختر</option>
+<option value="grilled">🔥 شوي</option>
+<option value="boiled">💧 سلق</option>
+<option value="fried">🍳 قلي</option>
+<option value="roasted">♨️ تحمير</option>
+<option value="raw">🥗 نيء</option>
+<option value="stewed">🍲 طاجن</option>
+</select>
+</div>
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">ملاحظات</label>
+<input type="text" class="input-field meal-notes" style="padding:8px 12px;" placeholder="مع ملح">
+</div>
+</div>
+</div>
+</div>
+<button class="btn-primary" style="margin-top:12px;" onclick="addMeal()">➕ إضافة وجبة</button>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">💧 الماء والنشاط</h3>
+<div class="grid-3">
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">الماء (لتر)</label><input type="number" step="0.1" class="input-field" id="waterIntake" placeholder="1.5"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">ساعات النوم</label><input type="number" step="0.5" class="input-field" id="sleepHours" placeholder="7.5"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">نشاط بدني (دقيقة)</label><input type="number" class="input-field" id="activityMin" placeholder="30"></div>
+</div>
+</div>
+<div style="display:flex;justify-content:center;margin-top:24px;">
+<button class="btn-success" style="font-size:16px;padding:12px 32px;" onclick="saveDailyLog()">✅ حفظ سجل اليوم</button>
+</div>
+</div>
+
+<!-- Symptoms -->
+<div class="section" id="symptoms">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">الأعراض الجانبية</h2>
+<p style="color:#6b7280;">سجل أي أعراض تشعر بها يومياً</p>
+</div>
+<div class="alert-orange" style="margin-top:16px;">
+⚠️ درجة 8 أو أكثر = <strong>اتصل بالإسعاف</strong>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">اليوم: <span id="symptomDate"></span></h3>
+<div id="symptomsList"></div>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">أعراض أخرى</h3>
+<textarea class="input-field" id="otherSymptoms" rows="3" placeholder="صف أي أعراض أخرى تشعر بها..."></textarea>
+</div>
+<div style="display:flex;justify-content:center;margin-top:24px;">
+<button class="btn-success" style="font-size:16px;padding:12px 32px;" onclick="saveSymptoms()">✅ حفظ الأعراض</button>
+</div>
+</div>
+
+<!-- Medications -->
+<div class="section" id="medications">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">الأدوية والمكملات</h2>
+<p style="color:#6b7280;">توثيق دقيق للأدوية</p>
+</div>
+<div class="alert-red" style="margin-top:16px;">
+☠️ <strong>لا تُوقف أي دواء بدون طبيب!</strong>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">الأدوية الحالية</h3>
+<div id="medsContainer">
+<div class="meal-card">
+<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;">
+<div style="grid-column:span 2;"><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">اسم الدواء</label><input type="text" class="input-field med-name" style="padding:8px 12px;" placeholder="ميتفورمين"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الجرعة</label><input type="text" class="input-field med-dose" style="padding:8px 12px;" placeholder="500mg"></div>
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">التكرار</label>
+<select class="input-field med-freq" style="padding:8px 12px;">
+<option value="">اختر</option>
+<option value="1x">مرة</option>
+<option value="2x">مرتين</option>
+<option value="3x">3 مرات</option>
+<option value="as_needed">حسب الحاجة</option>
+</select>
+</div>
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الحالة</label>
+<select class="input-field med-status" style="padding:8px 12px;" onchange="checkMedStatus(this)">
+<option value="active">✅ مستمر</option>
+<option value="stopped">🛑 توقفت</option>
+<option value="changed">⚠️ تغيرت</option>
+</select>
+</div>
+</div>
+<div class="med-warning hidden" style="margin-top:12px;padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;color:#991b1b;font-size:13px;">
+⚠️ <strong>تنبيه:</strong> يجب مراجعة طبيبك قبل تغيير هذا الدواء!
+</div>
+</div>
+</div>
+<button class="btn-primary" style="margin-top:12px;" onclick="addMed()">➕ إضافة دواء</button>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">المكملات الغذائية</h3>
+<div id="suppsContainer">
+<div class="meal-card">
+<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;">
+<div style="grid-column:span 2;"><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">اسم المكمل</label><input type="text" class="input-field supp-name" style="padding:8px 12px;" placeholder="فيتامين D3"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الجرعة</label><input type="text" class="input-field supp-dose" style="padding:8px 12px;" placeholder="5000 IU"></div>
+<div>
+<label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">التكرار</label>
+<select class="input-field supp-freq" style="padding:8px 12px;">
+<option value="">اختر</option>
+<option value="daily">يومياً</option>
+<option value="weekly">أسبوعياً</option>
+<option value="monthly">شهرياً</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<button class="btn-primary" style="margin-top:12px;" onclick="addSupp()">➕ إضافة مكمل</button>
+</div>
+<div style="display:flex;justify-content:center;margin-top:24px;">
+<button class="btn-success" style="font-size:16px;padding:12px 32px;" onclick="saveMeds()">✅ حفظ الأدوية</button>
+</div>
+</div>
+<!-- Follow-up Tests -->
+<div class="section" id="followup">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">التحاليل الدورية</h2>
+<p style="color:#6b7280;">أدخل نتائج التحاليل للمقارنة مع خط الأساس</p>
+</div>
+<div class="alert-blue" style="margin-top:16px;">
+📅 <strong>الجدول:</strong> أسبوع 2 → أسبوع 4 → أسبوع 8 → كل 3 أشهر
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<div class="grid-3" style="margin-bottom:16px;">
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">تاريخ التحاليل *</label><input type="date" class="input-field" id="followupDate"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">المختبر</label><input type="text" class="input-field" id="followupLab" placeholder="اسم المختبر"></div>
+<div><label style="display:block;font-size:14px;font-weight:600;color:#4b5563;margin-bottom:6px;">رقم التقرير</label><input type="text" class="input-field" id="followupReportNum" placeholder="للتوثيق"></div>
+</div>
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">نتائج التحاليل</h3>
+<div style="background:#f9fafb;border-radius:12px;padding:16px;">
+<div class="test-row" style="font-weight:700;color:#6b7280;font-size:13px;">
+<span>التحليل</span><span>القيمة الجديدة</span><span>القيمة الأساس</span><span>التغير</span>
+</div>
+<div id="followupTests"></div>
+</div>
+</div>
+<div style="display:flex;justify-content:center;margin-top:24px;">
+<button class="btn-success" style="font-size:16px;padding:12px 32px;" onclick="saveFollowup()">✅ حفظ التحاليل</button>
+</div>
+</div>
+
+<!-- Reports -->
+<div class="section" id="reports">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">التقارير والرسوم البيانية</h2>
+<p style="color:#6b7280;">رؤية شاملة لتطور حالتك</p>
+</div>
+<div class="grid-2" style="margin-top:16px;">
+<div class="glass-card">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">📉 تطور الوزن</h3>
+<div class="chart-container"><canvas id="reportWeightChart"></canvas></div>
+</div>
+<div class="glass-card">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">📈 تطور السكر الصائم</h3>
+<div class="chart-container"><canvas id="reportSugarChart"></canvas></div>
+</div>
+</div>
+<div class="grid-2" style="margin-top:16px;">
+<div class="glass-card">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">🫘 تطور eGFR</h3>
+<div class="chart-container"><canvas id="reportEGFRChart"></canvas></div>
+</div>
+<div class="glass-card">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">❤️ تطور ضغط الدم</h3>
+<div class="chart-container"><canvas id="reportBPChart"></canvas></div>
+</div>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">📊 جدول مقارنة التحاليل</h3>
+<div style="overflow-x:auto;">
+<table style="width:100%;font-size:14px;border-collapse:collapse;">
+<thead><tr style="background:#f3f4f6;">
+<th style="padding:12px;text-align:right;">التحليل</th>
+<th style="padding:12px;text-align:right;">الأساس</th>
+<th style="padding:12px;text-align:right;">آخر نتيجة</th>
+<th style="padding:12px;text-align:right;">الفرق</th>
+<th style="padding:12px;text-align:right;">التقييم</th>
+</tr></thead>
+<tbody id="comparisonTable"></tbody>
+</table>
+</div>
+</div>
+<div style="display:flex;justify-content:center;gap:16px;margin-top:24px;">
+<button class="btn-primary" style="font-size:16px;padding:12px 32px;" onclick="generatePDFReport()">📄 تصدير PDF</button>
+<button class="btn-success" style="font-size:16px;padding:12px 32px;" onclick="printReport()">🖨️ طباعة</button>
+</div>
+</div>
+
+<!-- Alerts -->
+<div class="section" id="alerts">
+<div class="glass-card">
+<h2 style="font-size:24px;font-weight:800;color:#1f2937;margin-bottom:4px;">التنبيهات الطبية</h2>
+<p style="color:#6b7280;">نظام مراقبة آلي</p>
+</div>
+<div id="alertsContainer" style="margin-top:16px;">
+<div class="alert-blue">ℹ️ أكمل البيانات الأولية والتحاليل أولاً</div>
+</div>
+<div class="glass-card" style="margin-top:16px;">
+<h3 style="font-weight:700;color:#1f2937;margin-bottom:16px;">🔔 التنبيهات السابقة</h3>
+<div id="alertsHistory" style="display:flex;flex-direction:column;gap:12px;">
+<p style="color:#9ca3af;text-align:center;padding:32px 0;">لا توجد تنبيهات سابقة</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+// ==================== DATA ====================
+const testDefinitions = [
+{id:'fbs',name:'سكر صائم (FBS)',unit:'mg/dL',ref:'70-100',min:70,max:100,criticalHigh:300,criticalLow:50},
+{id:'hba1c',name:'HbA1c',unit:'%',ref:'< 5.7',min:0,max:5.7,criticalHigh:10},
+{id:'creatinine',name:'الكرياتينين',unit:'mg/dL',ref:'0.7-1.3',min:0.7,max:1.3},
+{id:'egfr',name:'eGFR',unit:'mL/min',ref:'> 90',min:90,max:999,criticalLow:60},
+{id:'alt',name:'ALT (كبد)',unit:'U/L',ref:'< 40',min:0,max:40,criticalHigh:120},
+{id:'ast',name:'AST (كبد)',unit:'U/L',ref:'< 40',min:0,max:40,criticalHigh:120},
+{id:'wbc',name:'كريات بيضاء',unit:'K/μL',ref:'4-11',min:4,max:11},
+{id:'hemoglobin',name:'الهيموجلوبين',unit:'g/dL',ref:'M:13.5-17.5',min:12,max:17.5},
+{id:'cholesterol',name:'الكوليسترول الكلي',unit:'mg/dL',ref:'< 200',min:0,max:200,criticalHigh:300},
+{id:'ldl',name:'LDL (ضار)',unit:'mg/dL',ref:'< 100',min:0,max:100,criticalHigh:190},
+{id:'hdl',name:'HDL (نافع)',unit:'mg/dL',ref:'> 40',min:40,max:999},
+{id:'triglycerides',name:'الدهون الثلاثية',unit:'mg/dL',ref:'< 150',min:0,max:150,criticalHigh:500},
+{id:'b12',name:'فيتامين B12',unit:'pg/mL',ref:'200-900',min:200,max:900,criticalLow:150},
+{id:'vitd',name:'فيتامين D',unit:'ng/mL',ref:'30-100',min:30,max:100,criticalLow:20},
+{id:'iron',name:'الحديد',unit:'μg/dL',ref:'M:65-176',min:50,max:176,criticalLow:30},
+{id:'ferritin',name:'فيريتين',unit:'ng/mL',ref:'M:24-336',min:11,max:336,criticalLow:10},
+{id:'calcium',name:'الكالسيوم',unit:'mg/dL',ref:'8.5-10.5',min:8.5,max:10.5},
+{id:'uric_acid',name:'حمض البوليك',unit:'mg/dL',ref:'3.5-7.2',min:2.6,max:7.2,criticalHigh:9},
+{id:'urine_ph',name:'pH البول',unit:'',ref:'4.5-8.0',min:4.5,max:8.0},
+{id:'blood_ph',name:'pH الدم',unit:'',ref:'7.35-7.45',min:7.35,max:7.45,criticalLow:7.2,criticalHigh:7.6}
+];
+
+const symptomDefinitions = [
+{id:'nausea',name:'غثيان / قيء',icon:'🤢'},
+{id:'constipation',name:'إمساك',icon:'🚫'},
+{id:'diarrhea',name:'إسهال',icon:'💩'},
+{id:'dizziness',name:'دوخة / إغماء',icon:'😵'},
+{id:'chest_pain',name:'ألم صدري',icon:'💔'},
+{id:'fatigue',name:'تعب عام',icon:'😴'},
+{id:'dark_urine',name:'بول داكن',icon:'🟤'},
+{id:'cramps',name:'تشنجات عضلية',icon:'💪'},
+{id:'hair_loss',name:'تساقط شعر',icon:'💇'},
+{id:'mood_change',name:'تغير مزاج',icon:'😤'},
+{id:'bad_breath',name:'رائحة فم كريهة',icon:'👃'},
+{id:'skin_rash',name:'طفح جلدي',icon:'🔴'}
+];
+
+let appData = {baseline:null,dailyLogs:[],symptoms:[],medications:[],followups:[],alerts:[]};
+
+function loadData(){
+const saved = localStorage.getItem('healthTrackerData');
+if(saved){appData = JSON.parse(saved);updateDashboard();generateAlerts();}
+}
+
+function saveData(){
+localStorage.setItem('healthTrackerData',JSON.stringify(appData));
+document.getElementById('lastUpdate').textContent = new Date().toLocaleString('ar-SA');
+}
+
+// ==================== UI ====================
+function showSection(id,el){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+if(el) el.classList.add('active');
+if(id==='reports') renderReports();
+if(id==='alerts') renderAlerts();
+}
+
+// ==================== BASELINE ====================
+function renderBaselineTests(){
+document.getElementById('baselineTests').innerHTML = testDefinitions.map(t=>`
+<div class="test-row">
+<span style="font-size:14px;color:#374151;">${t.name}</span>
+<input type="text" class="input-field baseline-val" data-id="${t.id}" placeholder="—" style="padding:8px;text-align:center;">
+<span style="font-size:12px;color:#6b7280;text-align:center;">${t.unit}</span>
+<span style="font-size:12px;color:#9ca3af;text-align:center;">${t.ref}</span>
+</div>
+`).join('');
+}
+
+function calcBMI(){
+const w = parseFloat(document.getElementById('bWeight').value);
+const h = parseFloat(document.getElementById('bHeight').value);
+if(w&&h) document.getElementById('bBMI').value = (w/((h/100)**2)).toFixed(1);
+}
+
+function saveBaseline(){
+const tests = {};
+document.querySelectorAll('.baseline-val').forEach(i=>{
+const v = parseFloat(i.value);
+if(!isNaN(v)) tests[i.dataset.id] = v;
+});
+appData.baseline = {
+date: new Date().toISOString(),
+personal: {name:document.getElementById('pName').value,age:document.getElementById('pAge').value,gender:document.getElementById('pGender').value},
+measurements: {weight:parseFloat(document.getElementById('bWeight').value),height:parseFloat(document.getElementById('bHeight').value),waist:parseFloat(document.getElementById('bWaist').value)||null,bmi:parseFloat(document.getElementById('bBMI').value)||null,bpSys:parseFloat(document.getElementById('bBPsys').value)||null,bpDia:parseFloat(document.getElementById('bBPdia').value)||null,hr:parseFloat(document.getElementById('bHR').value)||null},
+tests: tests,
+history: {diseases:document.getElementById('bDiseases').value,medications:document.getElementById('bMeds').value,allergies:document.getElementById('bAllergies').value,family:document.getElementById('bFamily').value}
+};
+saveData();
+alert('✅ تم حفظ البيانات الأولية!');
+updateDashboard();
+}
+
+// ==================== DAILY LOG ====================
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ar-SA');
+
+function addMeal(){
+const c = document.getElementById('mealsContainer');
+const n = c.children.length + 1;
+const d = document.createElement('div'); d.className = 'meal-card';
+d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<h4 style="font-weight:700;color:#374151;">الوجبة ${n}</h4>
+<button style="color:#ef4444;background:none;border:none;cursor:pointer;font-size:18px;" onclick="this.closest('.meal-card').remove();updateMealCount();">🗑️</button>
+</div>
+<div class="grid-4">
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">نوع الطعام</label><select class="input-field meal-type" style="padding:8px 12px;"><option value="">اختر</option><option value="meat_red">🥩 لحم أحمر</option><option value="meat_white">🍗 لحم أبيض</option><option value="fish">🐟 سمك</option><option value="eggs">🥚 بيض</option><option value="butter">🧈 زبدة/سمن</option><option value="oil">🫒 زيت نباتي</option><option value="veg_cooked">🥬 خضار مطبوخ</option><option value="veg_raw">🥗 خضار نيء</option><option value="dairy">🥛 ألبان/جبن</option><option value="nuts">🥜 مكسرات</option><option value="fruit">🍎 فواكه</option><option value="other">📦 أخرى</option></select></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الكمية (غرام)</label><input type="number" class="input-field meal-qty" style="padding:8px 12px;" placeholder="150"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">طريقة الطهي</label><select class="input-field meal-cook" style="padding:8px 12px;"><option value="">اختر</option><option value="grilled">🔥 شوي</option><option value="boiled">💧 سلق</option><option value="fried">🍳 قلي</option><option value="roasted">♨️ تحمير</option><option value="raw">🥗 نيء</option><option value="stewed">🍲 طاجن</option></select></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">ملاحظات</label><input type="text" class="input-field meal-notes" style="padding:8px 12px;" placeholder="مع ملح"></div>
+</div>`;
+c.appendChild(d); updateMealCount();
+}
+
+function updateMealCount(){
+document.getElementById('todayMealsCount').textContent = document.querySelectorAll('#mealsContainer .meal-card').length + ' وجبات';
+}
+
+function saveDailyLog(){
+const meals = [];
+document.querySelectorAll('#mealsContainer .meal-card').forEach(c=>{
+meals.push({type:c.querySelector('.meal-type').value,qty:c.querySelector('.meal-qty').value,cook:c.querySelector('.meal-cook').value,notes:c.querySelector('.meal-notes').value});
+});
+appData.dailyLogs.push({date:new Date().toISOString(),meals:meals,water:document.getElementById('waterIntake').value,sleep:document.getElementById('sleepHours').value,activity:document.getElementById('activityMin').value});
+saveData();
+alert('✅ تم حفظ سجل اليوم!');
+}
+
+// ==================== SYMPTOMS ====================
+document.getElementById('symptomDate').textContent = new Date().toLocaleDateString('ar-SA');
+
+function renderSymptoms(){
+document.getElementById('symptomsList').innerHTML = symptomDefinitions.map(s=>`
+<div style="margin-bottom:24px;padding:16px;background:#f9fafb;border-radius:12px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+<span style="font-weight:700;color:#374151;font-size:16px;">${s.icon} ${s.name}</span>
+<span class="badge badge-blue" id="symVal_${s.id}">0/10</span>
+</div>
+<input type="range" min="0" max="10" value="0" class="symptom-slider" id="sym_${s.id}"
+oninput="const v=this.value,el=document.getElementById('symVal_${s.id}');el.textContent=v+'/10';el.className='badge '+(v>=8?'badge-red':v>=5?'badge-orange':'badge-green');">
+<div style="display:flex;justify-content:space-between;font-size:12px;color:#9ca3af;margin-top:8px;"><span>لا يوجد</span><span>متوسط</span><span>شديد</span></div>
+</div>
+`).join('');
+}
+
+function saveSymptoms(){
+const symptoms = {};
+symptomDefinitions.forEach(s=>{symptoms[s.id] = parseInt(document.getElementById('sym_'+s.id).value);});
+appData.symptoms.push({date:new Date().toISOString(),symptoms:symptoms,other:document.getElementById('otherSymptoms').value});
+saveData();
+generateAlerts();
+alert('✅ تم حفظ الأعراض!');
+}
+
+// ==================== MEDICATIONS ====================
+function checkMedStatus(select){
+const w = select.closest('.meal-card').querySelector('.med-warning');
+select.value !== 'active' ? w.classList.remove('hidden') : w.classList.add('hidden');
+}
+
+function addMed(){
+const c = document.getElementById('medsContainer');
+const d = document.createElement('div'); d.className = 'meal-card';
+d.innerHTML = `<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px;">
+<div style="grid-column:span 2;"><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">اسم الدواء</label><input type="text" class="input-field med-name" style="padding:8px 12px;" placeholder="اسم الدواء"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الجرعة</label><input type="text" class="input-field med-dose" style="padding:8px 12px;" placeholder="500mg"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">التكرار</label><select class="input-field med-freq" style="padding:8px 12px;"><option value="">اختر</option><option value="1x">مرة</option><option value="2x">مرتين</option><option value="3x">3 مرات</option><option value="as_needed">حسب الحاجة</option></select></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الحالة</label><select class="input-field med-status" style="padding:8px 12px;" onchange="checkMedStatus(this)"><option value="active">✅ مستمر</option><option value="stopped">🛑 توقفت</option><option value="changed">⚠️ تغيرت</option></select></div>
+</div>
+<div class="med-warning hidden" style="margin-top:12px;padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;color:#991b1b;font-size:13px;">⚠️ <strong>تنبيه:</strong> يجب مراجعة طبيبك!</div>`;
+c.appendChild(d);
+}
+
+function addSupp(){
+const c = document.getElementById('suppsContainer');
+const d = document.createElement('div'); d.className = 'meal-card';
+d.innerHTML = `<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;">
+<div style="grid-column:span 2;"><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">اسم المكمل</label><input type="text" class="input-field supp-name" style="padding:8px 12px;" placeholder="فيتامين D3"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">الجرعة</label><input type="text" class="input-field supp-dose" style="padding:8px 12px;" placeholder="5000 IU"></div>
+<div><label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;">التكرار</label><select class="input-field supp-freq" style="padding:8px 12px;"><option value="">اختر</option><option value="daily">يومياً</option><option value="weekly">أسبوعياً</option><option value="monthly">شهرياُ</option></select></div>
+</div>`;
+c.appendChild(d);
+}
+
+function saveMeds(){
+const meds = [];
+document.querySelectorAll('#medsContainer .meal-card').forEach(c=>{
+meds.push({name:c.querySelector('.med-name').value,dose:c.querySelector('.med-dose').value,freq:c.querySelector('.med-freq').value,status:c.querySelector('.med-status').value});
+});
+const supps = [];
+document.querySelectorAll('#suppsContainer .meal-card').forEach(c=>{
+supps.push({name:c.querySelector('.supp-name').value,dose:c.querySelector('.supp-dose').value,freq:c.querySelector('.supp-freq').value});
+});
+appData.medications = {meds,supps};
+saveData();
+alert('✅ تم حفظ الأدوية!');
+}
+
+// ==================== FOLLOW-UP ====================
+function renderFollowupTests(){
+const c = document.getElementById('followupTests');
+const bt = appData.baseline ? appData.baseline.tests : {};
+c.innerHTML = testDefinitions.map(t=>{
+const bv = bt[t.id] || '—';
+return `<div class="test-row">
+<span style="font-size:14px;color:#374151;">${t.name}</span>
+<input type="text" class="input-field followup-val" data-id="${t.id}" placeholder="—" style="padding:8px;text-align:center;" oninput="calcChange(this)">
+<span style="font-size:12px;color:#6b7280;text-align:center;">${bv}</span>
+<span style="font-size:12px;color:#9ca3af;text-align:center followup-change" data-id="${t.id}">—</span>
+</div>`;
+}).join('');
+}
+
+function calcChange(input){
+const id = input.dataset.id;
+const nv = parseFloat(input.value);
+const bv = appData.baseline ? appData.baseline.tests[id] : null;
+const el = document.querySelector('.followup-change[data-id="'+id+'"]');
+if(!isNaN(nv) && bv){
+const d = nv - bv;
+const p = ((d/bv)*100).toFixed(1);
+const a = d>0 ? '↑' : (d<0 ? '↓' : '→');
+el.textContent = a+' '+Math.abs(d).toFixed(1)+' ('+(d>0?'+':'')+p+'%)';
+el.style.color = d>0 ? '#dc2626' : (d<0 ? '#16a34a' : '#6b7280');
+} else {el.textContent = '—';}
+}
+
+function saveFollowup(){
+const tests = {};
+document.querySelectorAll('.followup-val').forEach(i=>{
+const v = parseFloat(i.value);
+if(!isNaN(v)) tests[i.dataset.id] = v;
+});
+appData.followups.push({date:document.getElementById('followupDate').value || new Date().toISOString().split('T')[0],lab:document.getElementById('followupLab').value,reportNum:document.getElementById('followupReportNum').value,tests:tests});
+saveData();
+generateAlerts();
+alert('✅ تم حفظ التحاليل!');
+updateDashboard();
+}
+
+// ==================== DASHBOARD ====================
+function updateDashboard(){
+if(!appData.baseline) return;
+const bw = appData.baseline.measurements.weight;
+document.getElementById('currentWeight').textContent = bw ? bw+' كغ' : '—';
+let lf = appData.followups.length > 0 ? appData.followups[appData.followups.length-1] : null;
+const bs = appData.baseline.tests.fbs;
+const ls = lf ? lf.tests.fbs : bs;
+document.getElementById('currentSugar').textContent = ls ? ls+' mg/dL' : '—';
+if(ls){
+document.getElementById('sugarStatus').className = 'badge '+(ls>126?'badge-red':ls>100?'badge-orange':'badge-green');
+document.getElementById('sugarStatus').textContent = ls>126 ? 'مرتفع' : (ls>100 ? 'محدود' : 'طبيعي');
+}
+const be = appData.baseline.tests.egfr;
+const le = lf ? lf.tests.egfr : be;
+document.getElementById('currentEGFR').textContent = le ? le : '—';
+if(le){
+document.getElementById('kidneyStatus').className = 'badge '+(le<60?'badge-red':le<90?'badge-orange':'badge-green');
+document.getElementById('kidneyStatus').textContent = le<60 ? 'خطر!' : (le<90 ? 'ملاحظ' : 'جيد');
+}
+const sd = new Date(appData.baseline.date);
+const td = new Date();
+const dd = Math.floor((td-sd)/(1000*60*60*24));
+document.getElementById('followupDays').textContent = dd;
+document.getElementById('daysCount').textContent = dd+' يوم';
+updateCharts();
+}
+
+function updateCharts(){
+const wd=[], sd=[], lb=[];
+if(appData.baseline){lb.push('البداية');wd.push(appData.baseline.measurements.weight);sd.push(appData.baseline.tests.fbs||null);}
+appData.followups.forEach((f,i)=>{lb.push('متابعة '+(i+1));wd.push(f.tests.weight||wd[wd.length-1]);sd.push(f.tests.fbs||null);});
+const wCtx = document.getElementById('weightChart');
+if(wCtx && wd.length>0){
+const old = Chart.getChart(wCtx); if(old) old.destroy();
+new Chart(wCtx,{type:'line',data:{labels:lb,datasets:[{label:'الوزن',data:wd,borderColor:'#0ea5e9',backgroundColor:'rgba(14,165,233,0.1)',fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+}
+const sCtx = document.getElementById('sugarChart');
+if(sCtx && sd.some(v=>v!==null)){
+const old = Chart.getChart(sCtx); if(old) old.destroy();
+new Chart(sCtx,{type:'line',data:{labels:lb,datasets:[{label:'سكر صائم',data:sd,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{suggestedMin:60,suggestedMax:200}}}});
+}
+}
+
+// ==================== ALERTS ====================
+function generateAlerts(){
+const alerts = [];
+if(!appData.baseline) return;
+const lf = appData.followups.length > 0 ? appData.followups[appData.followups.length-1] : null;
+if(lf && lf.tests){
+const t = lf.tests;
+if(t.egfr!==undefined && t.egfr<60) alerts.push({level:'red',title:'🚨 خطر على الكلى!',message:'eGFR = '+t.egfr+' (الطبيعي > 90). توقف واتصل بطبيبك.',date:new Date().toISOString()});
+if(t.alt!==undefined && t.alt>120) alerts.push({level:'red',title:'🚨 خطر على الكبد!',message:'ALT = '+t.alt+' U/L. مراجعة طبيب فوراً.',date:new Date().toISOString()});
+if(t.fbs!==undefined){
+if(t.fbs>300) alerts.push({level:'red',title:'🚨 سكر مرتفع خطير!',message:'سكر صائم = '+t.fbs+' mg/dL. اتصل بالإسعاف!',date:new Date().toISOString()});
+else if(t.fbs<50) alerts.push({level:'red',title:'🚨 سكر منخفض خطير!',message:'سكر صائم = '+t.fbs+' mg/dL. خطر هبوط سكر!',date:new Date().toISOString()});
+}
+if(t.ldl!==undefined && appData.baseline.tests.ldl!==undefined){
+const d = t.ldl - appData.baseline.tests.ldl;
+if(d>50) alerts.push({level:'orange',title:'⚠️ ارتفاع LDL',message:'LDL ارتفع '+d+' mg/dL عن الأساس.',date:new Date().toISOString()});
+}
+if(t.b12!==undefined && t.b12<150) alerts.push({level:'orange',title:'⚠️ نقص B12',message:'B12 = '+t.b12+' pg/mL. قد يسبب فقر دم.',date:new Date().toISOString()});
+if(t.vitd!==undefined && t.vitd<20) alerts.push({level:'orange',title:'⚠️ نقص فيتامين D',message:'فيتامين D = '+t.vitd+' ng/mL. يحتاج مكمل.',date:new Date().toISOString()});
+if(t.iron!==undefined && t.iron<30) alerts.push({level:'orange',title:'⚠️ نقص حديد',message:'الحديد = '+t.iron+' μg/dL. خطر فقر دم.',date:new Date().toISOString()});
+if(t.hba1c!==undefined && appData.baseline.tests.hba1c!==undefined){
+const d = appData.baseline.tests.hba1c - t.hba1c;
+if(d>0.5) alerts.push({level:'green',title:'✅ تحسن HbA1c',message:'HbA1c انخفض '+d.toFixed(1)+'% عن الأساس.',date:new Date().toISOString()});
+}
+}
+if(appData.symptoms.length>0){
+const ls = appData.symptoms[appData.symptoms.length-1];
+if(ls.symptoms){
+if(ls.symptoms.chest_pain>=8) alerts.push({level:'red',title:'🚨 ألم صدري شديد!',message:'درجة '+ls.symptoms.chest_pain+'/10. اتصل بالإسعاف!',date:new Date().toISOString()});
+if(ls.symptoms.dark_urine>=1) alerts.push({level:'red',title:'🚨 بول داكن!',message:'قد يشير إلى تحلل العضلات. مراجعة طوارئ فوراً!',date:new Date().toISOString()});
+}
+}
+appData.alerts = alerts; saveData();
+const ra = alerts.filter(a=>a.level==='red').length;
+const b = document.getElementById('alertBadge');
+if(ra>0){b.textContent=ra; b.classList.remove('hidden');}
+}
+
+function renderAlerts(){
+const c = document.getElementById('alertsContainer');
+const h = document.getElementById('alertsHistory');
+if(appData.alerts.length===0){
+c.innerHTML = '<div class="alert-blue">ℹ️ لا توجد تنبيهات حالياً.</div>';
+h.innerHTML = '<p style="color:#9ca3af;text-align:center;padding:32px 0;">لا توجد تنبيهات سابقة</p>'; return;
+}
+let html = '';
+appData.alerts.forEach(a=>{
+const cls = a.level==='red'?'alert-red':a.level==='orange'?'alert-orange':'alert-green';
+html += '<div class="'+cls+'" style="margin-bottom:12px;"><strong>'+a.title+'</strong><br>'+a.message+'<br><span style="font-size:12px;opacity:0.7;">'+new Date(a.date).toLocaleString('ar-SA')+'</span></div>';
+});
+c.innerHTML = html;
+let hist = '';
+appData.alerts.slice().reverse().forEach(a=>{
+const bc = a.level==='red'?'border-red-500 bg-red-50':a.level==='orange'?'border-orange-500 bg-orange-50':'border-green-500 bg-green-50';
+hist += '<div style="padding:16px;border-radius:12px;border-right:4px solid '+bc.split(' ')[0].replace('border-','').replace('red','#ef4444').replace('orange','#f97316').replace('green','#22c55e')+';background:'+(a.level==='red'?'#fef2f2':a.level==='orange'?'#fff7ed':'#f0fdf4')+'"><div style="font-weight:700;font-size:14px;">'+a.title+'</div><div style="font-size:14px;margin-top:4px;">'+a.message+'</div><div style="font-size:12px;color:#9ca3af;margin-top:8px;">'+new Date(a.date).toLocaleString('ar-SA')+'</div></div>';
+});
+h.innerHTML = hist;
+}
+
+// ==================== REPORTS ====================
+function renderReports(){
+if(!appData.baseline){document.getElementById('comparisonTable').innerHTML='<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:32px 0;">لم تُدخل البيانات الأولية بعد</td></tr>';return;}
+let th = '';
+const bt = appData.baseline.tests;
+const lf = appData.followups.length>0?appData.followups[appData.followups.length-1]:null;
+const lt = lf?lf.tests:{};
+testDefinitions.forEach(t=>{
+const bv = bt[t.id]; const lv = lt[t.id];
+if(bv!==undefined || lv!==undefined){
+let diff='', ec='', et='';
+if(bv&&lv){
+const d = lv-bv; const p = ((d/bv)*100).toFixed(1);
+const a = d>0?'↑':(d<0?'↓':'→');
+diff = a+' '+Math.abs(d).toFixed(1)+' ('+(d>0?'+':'')+p+'%)';
+if(t.criticalLow&&lv<t.criticalLow){ec='badge-red';et='خطر!';}
+else if(t.criticalHigh&&lv>t.criticalHigh){ec='badge-red';et='خطر!';}
+else if(lv<t.min||lv>t.max){ec='badge-orange';et='خارج المعدل';}
+else{ec='badge-green';et='طبيعي';}
+}
+th += '<tr><td style="padding:12px;border-bottom:1px solid #e5e7eb;">'+t.name+'</td><td style="padding:12px;text-align:center;border-bottom:1px solid #e5e7eb;">'+(bv||'—')+'</td><td style="padding:12px;text-align:center;font-weight:700;border-bottom:1px solid #e5e7eb;">'+(lv||'—')+'</td><td style="padding:12px;text-align:center;border-bottom:1px solid #e5e7eb;">'+diff+'</td><td style="padding:12px;text-align:center;border-bottom:1px solid #e5e7eb;"><span class="badge '+ec+'">'+et+'</span></td></tr>';
+}
+});
+document.getElementById('comparisonTable').innerHTML = th || '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:32px 0;">لا توجد بيانات كافية</td></tr>';
+renderReportCharts();
+}
+
+function renderReportCharts(){
+const lb=['البداية'];
+const wd=[appData.baseline.measurements.weight];
+const sd=[appData.baseline.tests.fbs||null];
+const ed=[appData.baseline.tests.egfr||null];
+const bps=[appData.baseline.measurements.bpSys||null];
+const bpd=[appData.baseline.measurements.bpDia||null];
+appData.followups.forEach((f,i)=>{lb.push('متابعة '+(i+1));wd.push(f.tests.weight||wd[wd.length-1]);sd.push(f.tests.fbs||null);ed.push(f.tests.egfr||null);bps.push(f.tests.bpSys||bps[bps.length-1]);bpd.push(f.tests.bpDia||bpd[bpd.length-1]);});
+['reportWeightChart','reportSugarChart','reportEGFRChart','reportBPChart'].forEach(id=>{
+const c=document.getElementById(id);if(c){const o=Chart.getChart(c);if(o)o.destroy();}
+});
+const rw=document.getElementById('reportWeightChart');
+if(rw&&wd.length>0)new Chart(rw,{type:'line',data:{labels:lb,datasets:[{label:'الوزن',data:wd,borderColor:'#0ea5e9',backgroundColor:'rgba(14,165,233,0.1)',fill:true,tension:0.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}});
+const rs=document.getElementById('reportSugarChart');
+if(rs&&sd.some(v=>v!==null))new Chart(rs,{type:'line',data:{labels:lb,datasets:[{label:'سكر صائم',data:sd,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',fill:true,tension:0.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{suggestedMin:60,suggestedMax:200}}}});
+const re=document.getElementById('reportEGFRChart');
+if(re&&ed.some(v=>v!==null))new Chart(re,{type:'line',data:{labels:lb,datasets:[{label:'eGFR',data:ed,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',fill:true,tension:0.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{suggestedMin:30,suggestedMax:120}}}});
+const rb=document.getElementById('reportBPChart');
+if(rb&&(bps.some(v=>v!==null)||bpd.some(v=>v!==null)))new Chart(rb,{type:'line',data:{labels:lb,datasets:[{label:'انقباضي',data:bps,borderColor:'#8b5cf6',fill:false,tension:0.4,pointRadius:5},{label:'انبساطي',data:bpd,borderColor:'#06b6d4',fill:false,tension:0.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{suggestedMin:60,suggestedMax:180}}}});
+}
+
+function generatePDFReport(){alert('📄 استخدم Ctrl+P (أو طباعة من القائمة) لحفظ الصفحة كـ PDF');}
+function printReport(){window.print();}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded',function(){
+renderBaselineTests();
+renderSymptoms();
+renderFollowupTests();
+document.getElementById('followupDate').value = new Date().toISOString().split('T')[0];
+const saved=localStorage.getItem('healthTrackerData');
+if(saved){appData=JSON.parse(saved);updateDashboard();generateAlerts();}
+});
+</script>
+</body>
+</html>
